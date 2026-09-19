@@ -90,26 +90,29 @@ export default function ProductPage() {
 
         {/* Main product */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          {/* Top: image + purchase box */}
           <div className="flex flex-col md:flex-row">
             {/* Image panel */}
-            <div className="md:w-72 bg-gray-50 flex items-center justify-center p-10 shrink-0">
+            <div className="md:w-64 bg-gray-50 flex items-center justify-center p-8 shrink-0 relative">
               {product.badge && (
-                <span className="hidden md:block absolute mt-[-180px] ml-[-140px] bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{product.badge}</span>
+                <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{product.badge}</span>
               )}
               <img
                 src={product.image || 'https://placehold.co/200x200?text=Key'}
                 alt={product.name}
-                className="w-36 h-36 object-contain"
+                className="w-32 h-32 object-contain"
                 onError={e => { e.target.src = 'https://placehold.co/200x200?text=Key'; }}
               />
             </div>
 
-            {/* Details */}
-            <div className="flex-1 p-6 flex flex-col gap-4">
+            {/* Purchase details */}
+            <div className="flex-1 p-6 flex flex-col gap-4 border-t md:border-t-0 md:border-l border-gray-100">
               <div>
-                <span className="text-xs font-semibold text-brand-500 uppercase tracking-wide">{product.category}</span>
-                {product.badge && <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{product.badge}</span>}
-                <h1 className="text-lg md:text-xl font-bold text-gray-900 mt-1 leading-snug">{product.name}</h1>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-semibold text-brand-500 uppercase tracking-wide">{product.category}</span>
+                  {product.badge && <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{product.badge}</span>}
+                </div>
+                <h1 className="text-lg md:text-xl font-bold text-gray-900 leading-snug">{product.name}</h1>
               </div>
 
               {product.showTimer && <Timer />}
@@ -121,28 +124,52 @@ export default function ProductPage() {
                 <span className="bg-green-100 text-green-700 text-sm font-bold px-2 py-0.5 rounded-lg">Save {discount}%</span>
               </div>
 
-              {/* Description */}
-              {product.description && (
-                <p className="text-sm text-gray-600 leading-relaxed">{product.description}</p>
-              )}
-
               {/* Trust badges */}
-              <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-                <span className="flex items-center gap-1">✅ Genuine Key</span>
-                <span className="flex items-center gap-1">⚡ Instant Delivery</span>
-                <span className="flex items-center gap-1">🔒 Secure Purchase</span>
-                <span className="flex items-center gap-1">📞 24/7 Support</span>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[['✅','Genuine Key'],['⚡','Instant Delivery'],['🔒','Secure Purchase'],['📞','24/7 Support']].map(([icon, label]) => (
+                  <span key={label} className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-2 text-gray-600 font-medium">
+                    <span>{icon}</span>{label}
+                  </span>
+                ))}
               </div>
 
               {/* Buy button */}
               <button
                 onClick={handleBuy}
-                className="w-full md:w-auto bg-brand-600 hover:bg-brand-700 active:bg-brand-900 text-white font-bold text-base py-3.5 px-10 rounded-xl transition-colors touch-manipulation"
+                className="w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-900 text-white font-bold text-base py-3.5 px-10 rounded-xl transition-colors touch-manipulation"
               >
                 Buy Now — ₹{product.salePrice.toLocaleString('en-IN')}
               </button>
             </div>
           </div>
+
+          {/* Description section below */}
+          {product.description && (
+            <div className="border-t border-gray-100 px-6 py-6">
+              <h2 className="font-bold text-gray-800 text-base mb-4">Product Details</h2>
+              <div className="text-sm text-gray-600 leading-relaxed space-y-1.5 max-w-2xl">
+                {product.description.split('\n').map((line, i) => {
+                  if (!line.trim()) return <div key={i} className="h-2" />;
+                  if (line.trim().endsWith(':')) return (
+                    <p key={i} className="font-semibold text-gray-800 text-sm mt-4 first:mt-0">{line.trim()}</p>
+                  );
+                  if (line.trim().startsWith('•')) return (
+                    <div key={i} className="flex gap-2 items-start">
+                      <span className="text-brand-500 font-bold mt-0.5 shrink-0">•</span>
+                      <span>{line.trim().slice(1).trim()}</span>
+                    </div>
+                  );
+                  if (/^\d+\./.test(line.trim())) return (
+                    <div key={i} className="flex gap-2 items-start">
+                      <span className="font-bold text-brand-600 shrink-0 w-4">{line.trim().match(/^\d+/)[0]}.</span>
+                      <span>{line.trim().replace(/^\d+\./, '').trim()}</span>
+                    </div>
+                  );
+                  return <p key={i}>{line.trim()}</p>;
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Related products */}

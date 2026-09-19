@@ -12,7 +12,23 @@ const EMPTY_SEO_SETTINGS = { metaTitle: '', metaDesc: '', ogImage: '', gscVerifi
 
 function ProductForm({ initial, onSave, onCancel, title }) {
   const [form, setForm] = useState(initial);
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const set = (k, v) => setForm(p => {
+    const updated = { ...p, [k]: v };
+    if ((k === 'originalPrice' || k === 'salePrice') && updated.originalPrice && updated.salePrice) {
+      const disc = Math.round((1 - updated.salePrice / updated.originalPrice) * 100);
+      if (disc > 0) updated.badge = `-${disc}%`;
+    }
+    return updated;
+  });
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => set('image', ev.target.result);
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
@@ -67,9 +83,22 @@ function ProductForm({ initial, onSave, onCancel, title }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-gray-600 block mb-1">Product Image URL</label>
-            <input value={form.image} onChange={e => set('image', e.target.value)}
-              className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="https://..." />
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Product Image</label>
+            <div className="flex gap-2 items-start">
+              {form.image && (
+                <img src={form.image} className="w-14 h-14 rounded-lg object-contain bg-gray-50 border shrink-0" alt="preview"
+                  onError={e => { e.target.style.display="none"; }} />
+              )}
+              <div className="flex-1 flex flex-col gap-2">
+                <input value={form.image && form.image.startsWith("data:") ? "" : form.image} onChange={e => set("image", e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="Paste image URL..." />
+                <label className="flex items-center gap-2 cursor-pointer border-2 border-dashed border-brand-300 rounded-lg px-3 py-2 hover:border-brand-500 transition-colors">
+                  <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <span className="text-xs text-brand-600 font-medium">{form.image && form.image.startsWith("data:") ? "Image uploaded ✅" : "Upload image from device"}</span>
+                  <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">
