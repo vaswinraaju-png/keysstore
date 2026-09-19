@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useCountdown } from '../hooks/useCountdown';
 
 function Timer() {
@@ -14,15 +15,24 @@ function Timer() {
 }
 
 export default function ProductCard({ product, buyNowUrl }) {
+  const navigate = useNavigate();
   const discount = Math.round((1 - product.salePrice / product.originalPrice) * 100);
+  const slug = product.seo?.slug;
 
-  const handleBuy = () => {
-    if (buyNowUrl) window.open(buyNowUrl, '_blank');
-    else alert('Contact us to purchase this key!');
+  const goToProduct = () => {
+    if (slug) navigate(`/product/${slug}`);
+  };
+
+  const handleBuy = (e) => {
+    e.stopPropagation();
+    if (slug) navigate(`/product/${slug}`);
   };
 
   return (
-    <article className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow group">
+    <article
+      onClick={goToProduct}
+      className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-md transition-shadow ${slug ? 'cursor-pointer' : ''}`}
+    >
       {/* Image + badge */}
       <div className="relative bg-gray-50 flex items-center justify-center h-40 p-4">
         {product.badge && (

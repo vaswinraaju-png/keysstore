@@ -4,7 +4,7 @@ import SeoFields from '../components/SeoFields';
 
 const EMPTY_PRODUCT = {
   name: '', originalPrice: '', salePrice: '', category: 'Windows',
-  badge: '', image: '', active: true, showTimer: true,
+  badge: '', image: '', description: '', active: true, showTimer: true,
   seo: { metaTitle: '', metaDesc: '', slug: '', keywords: '', ogTitle: '', ogDesc: '', ogImage: '', canonical: '', robots: 'index,follow', schema: true }
 };
 
@@ -58,6 +58,12 @@ function ProductForm({ initial, onSave, onCancel, title }) {
               <input value={form.badge} onChange={e => set('badge', e.target.value)}
                 className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="-84%" />
             </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Product Description</label>
+            <textarea value={form.description || ''} onChange={e => set('description', e.target.value)} rows={3}
+              className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 resize-none" placeholder="What's included, compatibility, activation steps..." />
           </div>
 
           <div>
