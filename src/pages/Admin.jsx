@@ -25,9 +25,22 @@ function ProductForm({ initial, onSave, onCancel, title }) {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => set('image', ev.target.result);
-    reader.readAsDataURL(file);
+    // Resize image before storing to avoid localStorage limits
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 400;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
+      else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/webp', 0.7);
+      set('image', compressed);
+      URL.revokeObjectURL(url);
+    };
+    img.src = url;
   };
 
   return (
