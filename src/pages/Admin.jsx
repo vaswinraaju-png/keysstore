@@ -10,7 +10,7 @@ const EMPTY_PRODUCT = {
 
 const EMPTY_SEO_SETTINGS = { metaTitle: '', metaDesc: '', ogImage: '', gscVerification: '', robotsTxt: '', analyticsId: '' };
 
-function ProductForm({ initial, onSave, onCancel, title }) {
+function ProductForm({ initial, onSave, onCancel, title, uploadImage }) {
   const [form, setForm] = useState(initial);
 
   const set = (k, v) => setForm(p => {
@@ -22,25 +22,15 @@ function ProductForm({ initial, onSave, onCancel, title }) {
     return updated;
   });
 
-  const handleImageUpload = (e) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-    // Resize image before storing to avoid localStorage limits
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const MAX = 400;
-      let w = img.width, h = img.height;
-      if (w > h) { if (w > MAX) { h = h * MAX / w; w = MAX; } }
-      else { if (h > MAX) { w = w * MAX / h; h = MAX; } }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      const compressed = canvas.toDataURL('image/webp', 0.7);
-      set('image', compressed);
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
+    if (!file || !uploadImage) return;
+    setUploading(true);
+    const url = await uploadImage(file);
+    if (url) set('image', url);
+    setUploading(false);
   };
 
   return (
@@ -107,7 +97,7 @@ function ProductForm({ initial, onSave, onCancel, title }) {
                   className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="Paste image URL..." />
                 <label className="flex items-center gap-2 cursor-pointer border-2 border-dashed border-brand-300 rounded-lg px-3 py-2 hover:border-brand-500 transition-colors">
                   <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  <span className="text-xs text-brand-600 font-medium">{form.image && form.image.startsWith("data:") ? "Image uploaded ✅" : "Upload image from device"}</span>
+                  <span className="text-xs text-brand-600 font-medium">{uploading ? "Uploading..." : form.image && !form.image.startsWith('data:') && form.image.startsWith('http') ? "Image uploaded ✅" : "Upload image from device"}</span>
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
               </div>
@@ -138,7 +128,7 @@ function ProductForm({ initial, onSave, onCancel, title }) {
 }
 
 export default function Admin({ onLogout }) {
-  const { products, siteSettings, setSiteSettings, addProduct, updateProduct, deleteProduct, toggleActive } = useStore();
+  const { products, siteSettings, setSiteSettings, addProduct, updateProduct, deleteProduct, toggleActive, uploadImage, loading } = useStore();
   const [tab, setTab] = useState('products');
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
@@ -166,6 +156,12 @@ export default function Admin({ onLogout }) {
 
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* Tabs */}
+        {loading && (
+          <div className="flex items-center gap-2 mb-4 text-sm text-brand-600">
+            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+            Loading from database...
+          </div>
+        )}
         <div className="flex gap-1 bg-white border rounded-xl p-1 mb-6 w-fit">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
@@ -298,8 +294,8 @@ export default function Admin({ onLogout }) {
         )}
       </div>
 
-      {showForm && <ProductForm initial={EMPTY_PRODUCT} onSave={handleAdd} onCancel={() => setShowForm(false)} title="Add New Product" />}
-      {editTarget && <ProductForm initial={editTarget} onSave={handleEdit} onCancel={() => setEditTarget(null)} title="Edit Product" />}
+      {showForm && <ProductForm initial={EMPTY_PRODUCT} onSave={handleAdd} onCancel={() => setShowForm(false)} title="Add New Product" uploadImage={uploadImage} />}
+      {editTarget && <ProductForm initial={editTarget} onSave={handleEdit} onCancel={() => setEditTarget(null)} title="Edit Product" uploadImage={uploadImage} />}
     </div>
   );
 }
