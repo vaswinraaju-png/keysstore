@@ -33,6 +33,23 @@ function ProductForm({ initial, onSave, onCancel, title, uploadImage }) {
     setUploading(false);
   };
 
+  const handleImagePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file || !uploadImage) return;
+        setUploading(true);
+        const url = await uploadImage(file);
+        if (url) set('image', url);
+        setUploading(false);
+        return;
+      }
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl my-8">
@@ -87,7 +104,7 @@ function ProductForm({ initial, onSave, onCancel, title, uploadImage }) {
 
           <div>
             <label className="text-xs font-semibold text-gray-600 block mb-1">Product Image</label>
-            <div className="flex gap-2 items-start">
+            <div className="flex gap-2 items-start" onPaste={handleImagePaste}>
               {form.image && (
                 <img src={form.image} className="w-14 h-14 rounded-lg object-contain bg-gray-50 border shrink-0" alt="preview"
                   onError={e => { e.target.style.display="none"; }} />
@@ -97,7 +114,7 @@ function ProductForm({ initial, onSave, onCancel, title, uploadImage }) {
                   className="w-full border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" placeholder="Paste image URL..." />
                 <label className="flex items-center gap-2 cursor-pointer border-2 border-dashed border-brand-300 rounded-lg px-3 py-2 hover:border-brand-500 transition-colors">
                   <svg className="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  <span className="text-xs text-brand-600 font-medium">{uploading ? "Uploading..." : form.image && !form.image.startsWith('data:') && form.image.startsWith('http') ? "Image uploaded ✅" : "Upload image from device"}</span>
+                  <span className="text-xs text-brand-600 font-medium">{uploading ? "Uploading..." : form.image && form.image.startsWith('http') ? "Image uploaded ✅" : "Upload or paste image"}</span>
                   <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
                 </label>
               </div>
