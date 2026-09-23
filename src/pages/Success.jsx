@@ -40,13 +40,13 @@ export default function Success() {
         </div>
 
         <div className="bg-brand-50 rounded-xl p-4 mb-6">
-          <p className="text-sm text-brand-700 font-semibold mb-1">⚡ Key delivery within 15 minutes</p>
-          <p className="text-xs text-brand-600">Your activation key will be sent to your email address. Please check your inbox and spam folder.</p>
+          <p className="text-sm text-brand-700 font-semibold mb-1">⚡ Key delivery within 15-30 minutes</p>
+          <p className="text-xs text-brand-600">Your activation key will be sent from <strong>admin@vortexlabs.app</strong> to your email. Please check your inbox and spam folder.</p>
         </div>
 
         <div className="flex flex-col gap-2">
           <a
-            href="https://wa.me/917094956963"
+            href="https://wa.me/919980291663"
             target="_blank"
             rel="noreferrer"
             className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
