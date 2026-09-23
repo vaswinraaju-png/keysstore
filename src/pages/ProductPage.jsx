@@ -1,4 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import CheckoutModal from '../components/CheckoutModal';
 import { useStore } from '../context/StoreContext';
 import SEOHead from '../components/SEOHead';
 import ProductCard from '../components/ProductCard';
@@ -19,6 +21,7 @@ function Timer() {
 
 export default function ProductPage() {
   const { slug } = useParams();
+  const [showCheckout, setShowCheckout] = useState(false);
   const { products, siteSettings } = useStore();
   const navigate = useNavigate();
 
@@ -38,16 +41,7 @@ export default function ProductPage() {
   const discount = Math.round((1 - product.salePrice / product.originalPrice) * 100);
   const related = products.filter(p => p.active && p.category === product.category && p.id !== product.id).slice(0, 3);
 
-  const handleBuy = () => {
-    if (siteSettings.whatsappNumber) {
-      const msg = encodeURIComponent(`Hi, I want to buy: ${product.name} at ₹${product.salePrice.toLocaleString('en-IN')}`);
-      window.open(`https://wa.me/${siteSettings.whatsappNumber.replace(/\D/g, '')}?text=${msg}`, '_blank');
-    } else if (siteSettings.buyNowUrl) {
-      window.open(siteSettings.buyNowUrl, '_blank');
-    } else {
-      alert('Contact us to purchase this key!');
-    }
-  };
+  const handleBuy = () => setShowCheckout(true);
 
   const schema = product.seo?.schema ? {
     "@context": "https://schema.org",
@@ -182,6 +176,7 @@ export default function ProductPage() {
           </div>
         )}
       </div>
+      {showCheckout && <CheckoutModal product={product} onClose={() => setShowCheckout(false)} />}
     </>
   );
 }

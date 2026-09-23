@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import ProductPage from './pages/ProductPage';
 import Admin from './pages/Admin';
+import Success from './pages/Success';
 import AdminLogin from './pages/AdminLogin';
 
 function AdminGuard() {
