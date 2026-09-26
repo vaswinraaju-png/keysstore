@@ -5,9 +5,34 @@ const RZP_KEY = 'rzp_live_TfMcd6I6bvPn98';
 export default function CheckoutModal({ product, onClose }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
   const [loading, setLoading] = useState(false);
+  const [coupon, setCoupon] = useState('');
+  const [couponApplied, setCouponApplied] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
   const [error, setError] = useState('');
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  const discount = couponApplied ? couponApplied.discount : 0;
+  const finalPrice = Math.max(1, Math.round(product.salePrice * (1 - discount / 100)));
+
+  const applyCoupon = async () => {
+    if (!coupon.trim()) return;
+    setCouponLoading(true);
+    setCouponError('');
+    setCouponApplied(null);
+    try {
+      const res = await fetch('/api/validate-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: coupon.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) { setCouponError(data.error); }
+      else { setCouponApplied(data); }
+    } catch { setCouponError('Could not apply coupon. Try again.'); }
+    setCouponLoading(false);
+  };
 
   const validate = () => {
     if (!form.name.trim()) return 'Please enter your name';
@@ -37,7 +62,7 @@ export default function CheckoutModal({ product, onClose }) {
     const orderRes = await fetch('/api/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: product.salePrice, productName: product.name, productId: product.id })
+      body: JSON.stringify({ amount: finalPrice, productName: product.name, productId: product.id })
     });
     const orderData = await orderRes.json();
     if (!orderData.orderId) { setError('Could not initiate payment. Please try again.'); setLoading(false); return; }
@@ -157,6 +182,38 @@ export default function CheckoutModal({ product, onClose }) {
             </div>
           </div>
 
+          {/* Coupon */}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Coupon Code</label>
+            <div className="flex gap-2">
+              <input
+                value={coupon}
+                onChange={e => { setCoupon(e.target.value.toUpperCase()); setCouponApplied(null); setCouponError(''); }}
+                placeholder="Enter coupon code"
+                className="flex-1 border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 uppercase"
+              />
+              <button onClick={applyCoupon} disabled={couponLoading || !coupon.trim()}
+                className="bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-700 font-semibold px-3 py-2.5 rounded-lg text-xs transition-colors">
+                {couponLoading ? '...' : 'Apply'}
+              </button>
+            </div>
+            {couponApplied && (
+              <p className="text-green-600 text-xs mt-1 font-semibold">✅ {couponApplied.discount}% off applied! You save ₹{(product.salePrice - finalPrice).toLocaleString('en-IN')}</p>
+            )}
+            {couponError && <p className="text-red-500 text-xs mt-1">{couponError}</p>}
+          </div>
+
+          {/* Price summary */}
+          {couponApplied && (
+            <div className="bg-green-50 rounded-xl p-3 flex justify-between items-center">
+              <div>
+                <p className="text-xs text-gray-500 line-through">₹{product.salePrice.toLocaleString('en-IN')}</p>
+                <p className="text-lg font-extrabold text-green-700">₹{finalPrice.toLocaleString('en-IN')}</p>
+              </div>
+              <span className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">-{couponApplied.discount}%</span>
+            </div>
+          )}
+
           {error && <p className="text-red-500 text-xs">{error}</p>}
 
           <button
@@ -164,7 +221,7 @@ export default function CheckoutModal({ product, onClose }) {
             disabled={loading}
             className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-bold py-3.5 rounded-xl text-sm transition-colors touch-manipulation mt-1"
           >
-            {loading ? 'Processing...' : `Pay ₹${product.salePrice.toLocaleString('en-IN')} Securely`}
+            {loading ? 'Processing...' : `Pay ₹${finalPrice.toLocaleString('en-IN')} Securely`}
           </button>
 
           <div className="flex items-center justify-center gap-3 text-xs text-gray-400">
