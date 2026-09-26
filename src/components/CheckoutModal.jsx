@@ -33,10 +33,20 @@ export default function CheckoutModal({ product, onClose }) {
       });
     }
 
+    // Create Razorpay order first
+    const orderRes = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: product.salePrice, productName: product.name, productId: product.id })
+    });
+    const orderData = await orderRes.json();
+    if (!orderData.orderId) { setError('Could not initiate payment. Please try again.'); setLoading(false); return; }
+
     const options = {
       key: RZP_KEY,
-      amount: product.salePrice * 100, // paise
+      amount: orderData.amount,
       currency: 'INR',
+      order_id: orderData.orderId,
       name: 'CDKeys India',
       description: product.name,
       prefill: {

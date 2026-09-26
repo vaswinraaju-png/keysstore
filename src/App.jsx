@@ -26,7 +26,6 @@ export default function App() {
           <Route path="/" element={<StoreLayout><Home /></StoreLayout>} />
           <Route path="/product/:slug" element={<StoreLayout><ProductPage /></StoreLayout>} />
           <Route path="/admin" element={<AdminGuard />} />
-          <Route path="/success" element={<StoreLayout><Success /></StoreLayout>} />
         </Routes>
       </BrowserRouter>
     </StoreProvider>
